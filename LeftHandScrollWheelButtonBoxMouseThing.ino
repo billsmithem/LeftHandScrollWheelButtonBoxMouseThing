@@ -12,6 +12,7 @@
 #include <Keyboard.h>
 #include <Mouse.h>
 #include "Rotary.h"
+#include "version.h"
 
 // #define	DEBUGGING
 // #define DEBUG_MODES
@@ -266,18 +267,21 @@ void setup() {
   // get center values for joystick (assuming you don't push on it at powerup)
   calibrateJoystick();
 
-	// wait a max of 4 seconds for serial port to init
-	for (int count = 0; count < 8; count++) {
-		if (Serial)
-			break;
-		delay(500);			// wait 1/2 sec
-	}
-
 	// enable debug?
 	if (debug_mode) {
 		print_filename(); 		// identify source file
 		Serial.println("Debug mode enabled");
 	}
+
+	while (!Serial) {
+		yield();
+	}
+	Serial.print("Commit Hash: ");
+	Serial.println(GIT_COMMIT_HASH);
+	Serial.print("Build Date: ");
+	Serial.println(BUILD_DATE);
+	Serial.println(SOURCE_FILE_NAME);	// print source file name
+	Serial.println();
 }
 
 //-----------------------------------------------------------------------------
@@ -362,7 +366,7 @@ int threshhold = range / 6;   // resting threshhold
 
 
 int lastMouseMove = millis();
-struct joyAxis {
+typedef struct joyAxis {
   int pin;
   int center;
 };
@@ -372,7 +376,7 @@ joyAxis y = { A2, 0 };
 int xCenter = 0;                      // center values read at boot
 int yCenter = 0;
 
-int readAxis(joyAxis *axis) {
+int readAxis(struct joyAxis *axis) {
   int reading = analogRead(axis->pin);
 
   // remove offset
